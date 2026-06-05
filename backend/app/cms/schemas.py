@@ -50,6 +50,7 @@ class ArtigoRead(ArtigoBase):
     publicado_em: datetime | None
     criado_em: datetime
     atualizado_em: datetime
+    visualizacoes: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

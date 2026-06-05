@@ -1,6 +1,7 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.cms.models import Artigo, ArtigoStatus, Categoria, Secao
+from app.cms.models import Artigo, ArtigoStatus, Categoria, Secao, Visualizacao
+from uuid import UUID
 
 class CategoriaRepository:
     def __init__(self, session: AsyncSession):
@@ -116,6 +117,20 @@ class ArtigoRepository:
     async def count_publicados(self) -> int:
         stmt = select(func.count()).select_from(Artigo).where(
             Artigo.status == ArtigoStatus.publicado
+        )
+        return (await self.session.execute(stmt)).scalar_one()
+    
+    async def registrar_visualizacao(
+            self, artigo_id: int, usuario_id: UUID | None = None
+    ) -> None:
+        self.session.add(
+            Visualizacao(artigo_id=artigo_id, usuario_id=usuario_id)
+        )
+        await self.session.flush()
+
+    async def contar_visualizacoes(self, artigo_id: int) -> int:
+        stmt = select(func.count()).select_from(Visualizacao).where(
+            Visualizacao.artigo_id == artigo_id
         )
         return (await self.session.execute(stmt)).scalar_one()
 

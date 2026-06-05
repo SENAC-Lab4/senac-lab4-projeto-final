@@ -3,7 +3,7 @@
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
-from sqlalchemy import Text, Integer, SmallInteger, DateTime, ForeignKey, UniqueConstraint, Enum as SAEnum, func
+from sqlalchemy import Text, Integer, BigInteger, SmallInteger, DateTime, ForeignKey, UniqueConstraint, Enum as SAEnum, func
 from sqlalchemy.orm import Mapped, mapped_column
 from app.base import Base
 
@@ -69,3 +69,17 @@ class Secao(Base):
     slug: Mapped[str] = mapped_column(Text, nullable=False)
     posicao: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+# ------------------ Visualizações ------------------
+class Visualizacao(Base):
+    __tablename__ = "visualizacoes"
+    __table_args__ = {"schema": "cms"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    artigo_id: Mapped[int] = mapped_column(
+        ForeignKey("cms.artigos.id", ondelete="CASCADE"), nullable=False
+    )
+    usuario_id: Mapped[UUID | None] = mapped_column()
+    visualizado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

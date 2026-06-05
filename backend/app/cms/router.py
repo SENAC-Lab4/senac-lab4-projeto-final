@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_sessao
-from app.security import require_admin
+from app.security import require_admin, get_current_user
 from app.cms.repository import ArtigoRepository, CategoriaRepository, SecaoRepository
 from app.cms.service import ArtigoService, CategoriaService, SecaoService
 from app.cms.models import ArtigoStatus
@@ -29,10 +29,20 @@ async def listar(
     return ArtigoList(items=items, total=total, page=page, page_size=page_size)
 
 @router.get("/{slug}", response_model=ArtigoRead)
-async def obter_por_slug(slug: str, svc: ArtigoService = Depends(_service)):
+async def obter_por_slug(
+    slug: str,
+    svc: ArtigoService = Depends(_service),
+    usuario: dict | None = Depends(get_current_user),
+):
     artigo = await svc.repo.get_by_slug(slug)
     if not artigo:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
+    
+    usuario_id = UUID(usuario["sub"]) if usuario else None
+    await svc.repo.registrar_visualizacao(artigo.id, usuario_id)
+    await svc.repo.session.commit()
+
+    artigo.visualizacoes = await svc.repo.contar_visualizacoes(artigo.id)
     return artigo
 
 
