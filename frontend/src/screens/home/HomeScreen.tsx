@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { getCategorias, Categoria } from '../../lib/api'
+import { categoriasExemplo } from '../../lib/dadosExemplo'
 import { cores } from '../../theme'
 
 type Props = { navigation: NativeStackNavigationProp<any> }
@@ -16,7 +17,8 @@ export default function HomeScreen({ navigation }: Props) {
 
   useEffect(() => {
     getCategorias()
-      .then(setCategorias)
+      .then(lista => setCategorias(lista.length > 0 ? lista : categoriasExemplo))
+      .catch(() => setCategorias(categoriasExemplo))
       .finally(() => setCarregando(false))
   }, [])
 

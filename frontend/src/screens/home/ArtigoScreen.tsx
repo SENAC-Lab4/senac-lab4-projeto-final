@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native'
 import { RouteProp } from '@react-navigation/native'
 import { getArtigo, Artigo } from '../../lib/api'
+import { artigoExemploPorSlug } from '../../lib/dadosExemplo'
 import { cores } from '../../theme'
 
 type Props = { route: RouteProp<any> }
@@ -14,6 +15,7 @@ export default function ArtigoScreen({ route }: Props) {
   useEffect(() => {
     getArtigo(slug)
       .then(setArtigo)
+      .catch(() => setArtigo(artigoExemploPorSlug(slug)))
       .finally(() => setCarregando(false))
   }, [slug])
 

@@ -1,18 +1,25 @@
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8000'
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  })
-  if (!res.ok) {
-    const erro = await res.json().catch(() => ({}))
-    throw new Error(erro.detail ?? `Erro ${res.status}`)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      const erro = await res.json().catch(() => ({}))
+      throw new Error(erro.detail ?? `Erro ${res.status}`)
+    }
+    return res.json()
+  } finally {
+    clearTimeout(timeout)
   }
-  return res.json()
 }
 
 function authHeaders(token: string) {

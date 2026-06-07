@@ -19,3 +19,9 @@ backend/.env.*
 !.env.example
 frontend/env
 backend/env
+
+# .env do ./frontend
+frontend/.env
+frontend/.env.*
+frontend/.env
+frontend/.env

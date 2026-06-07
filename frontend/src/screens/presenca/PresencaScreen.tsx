@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, Alert, Modal, ScrollView,
+  StyleSheet, Modal, ScrollView,
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { cores } from '../../theme'
@@ -20,6 +20,8 @@ export default function PresencaScreen() {
   const [modalVisivel, setModalVisivel] = useState(false)
   const [novoNome, setNovoNome] = useState('')
   const [novoTotal, setNovoTotal] = useState('')
+  const [erro, setErro] = useState('')
+  const [disciplinaParaExcluir, setDisciplinaParaExcluir] = useState<Disciplina | null>(null)
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then(data => {
@@ -33,7 +35,9 @@ export default function PresencaScreen() {
   }
 
   function adicionarFalta(id: string) {
-    salvar(disciplinas.map(d => d.id === id ? { ...d, faltas: d.faltas + 1 } : d))
+    salvar(disciplinas.map(d =>
+      d.id === id ? { ...d, faltas: Math.min(d.faltas + 1, d.totalAulas) } : d
+    ))
   }
 
   function removerFalta(id: string) {
@@ -42,17 +46,20 @@ export default function PresencaScreen() {
     ))
   }
 
-  function excluirDisciplina(id: string) {
-    Alert.alert('Remover disciplina', 'Tem certeza?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => salvar(disciplinas.filter(d => d.id !== id)) },
-    ])
+  function excluirDisciplina(disciplina: Disciplina) {
+    setDisciplinaParaExcluir(disciplina)
+  }
+
+  function confirmarExclusao() {
+    if (!disciplinaParaExcluir) return
+    salvar(disciplinas.filter(d => d.id !== disciplinaParaExcluir.id))
+    setDisciplinaParaExcluir(null)
   }
 
   function adicionarDisciplina() {
     const total = parseInt(novoTotal)
     if (!novoNome.trim() || isNaN(total) || total <= 0) {
-      Alert.alert('Preencha nome e total de aulas corretamente')
+      setErro('Preencha nome e total de aulas corretamente')
       return
     }
     const nova: Disciplina = {
@@ -64,6 +71,7 @@ export default function PresencaScreen() {
     salvar([...disciplinas, nova])
     setNovoNome('')
     setNovoTotal('')
+    setErro('')
     setModalVisivel(false)
   }
 
@@ -92,7 +100,10 @@ export default function PresencaScreen() {
             <View style={estilos.card}>
               <View style={estilos.cardHeader}>
                 <Text style={estilos.nome}>{item.nome}</Text>
-                <TouchableOpacity onPress={() => excluirDisciplina(item.id)}>
+                <TouchableOpacity
+                  onPress={() => excluirDisciplina(item)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
                   <Text style={estilos.excluir}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -131,7 +142,7 @@ export default function PresencaScreen() {
         }
       />
 
-      <TouchableOpacity style={estilos.fab} onPress={() => setModalVisivel(true)}>
+      <TouchableOpacity style={estilos.fab} onPress={() => { setErro(''); setModalVisivel(true) }}>
         <Text style={estilos.fabTexto}>+</Text>
       </TouchableOpacity>
 
@@ -154,12 +165,33 @@ export default function PresencaScreen() {
               onChangeText={setNovoTotal}
               keyboardType="number-pad"
             />
+            {erro ? <Text style={estilos.erro}>{erro}</Text> : null}
             <View style={estilos.modalBotoes}>
-              <TouchableOpacity style={estilos.botaoRemover} onPress={() => setModalVisivel(false)}>
+              <TouchableOpacity style={estilos.botaoRemover} onPress={() => { setModalVisivel(false); setErro('') }}>
                 <Text style={estilos.botaoTexto}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={estilos.botaoAdicionar} onPress={adicionarDisciplina}>
                 <Text style={[estilos.botaoTexto, { color: '#fff' }]}>Adicionar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!disciplinaParaExcluir} transparent animationType="slide">
+        <View style={estilos.modalOverlay}>
+          <View style={estilos.modal}>
+            <Text style={estilos.modalTitulo}>Remover disciplina</Text>
+            <Text style={estilos.modalMensagem}>
+              Tem certeza que deseja remover {disciplinaParaExcluir ? `"${disciplinaParaExcluir.nome}"` : 'esta disciplina'}?
+              Os registros de presença dela serão perdidos.
+            </Text>
+            <View style={estilos.modalBotoes}>
+              <TouchableOpacity style={estilos.botaoRemover} onPress={() => setDisciplinaParaExcluir(null)}>
+                <Text style={estilos.botaoTexto}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={estilos.botaoExcluirConfirmar} onPress={confirmarExclusao}>
+                <Text style={[estilos.botaoTexto, { color: '#fff' }]}>Remover</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -177,7 +209,7 @@ const estilos = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nome: { fontSize: 16, fontWeight: 'bold', color: cores.preto, flex: 1 },
-  excluir: { color: cores.cinza, fontSize: 16, paddingLeft: 12 },
+  excluir: { color: cores.cinza, fontSize: 18, padding: 6, paddingLeft: 12 },
   barraContainer: { height: 6, backgroundColor: '#f1f1f1', borderRadius: 3, marginBottom: 8 },
   barra: { height: 6, borderRadius: 3 },
   infoLinha: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -201,9 +233,12 @@ const estilos = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modal: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
   modalTitulo: { fontSize: 18, fontWeight: 'bold', color: cores.preto, marginBottom: 16 },
+  modalMensagem: { fontSize: 14, color: cores.cinza, lineHeight: 20, marginBottom: 20 },
   input: {
     borderWidth: 1, borderColor: cores.borda, borderRadius: 8,
     padding: 12, fontSize: 15, color: cores.preto, marginBottom: 12,
   },
+  erro: { color: '#dc2626', fontSize: 13, marginBottom: 12 },
   modalBotoes: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  botaoExcluirConfirmar: { flex: 1, backgroundColor: '#dc2626', borderRadius: 8, padding: 10, alignItems: 'center' },
 })

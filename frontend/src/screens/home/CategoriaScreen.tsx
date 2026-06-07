@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator }
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { getCategoria, CategoriaComSecoes, getArtigos, Artigo } from '../../lib/api'
+import { categoriaExemploComSecoes, artigosExemplo } from '../../lib/dadosExemplo'
 import { cores } from '../../theme'
 
 type Props = {
@@ -18,10 +19,16 @@ export default function CategoriaScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     async function carregar() {
-      const [cat, lista] = await Promise.all([getCategoria(slug), getArtigos(1, 100)])
-      setCategoria(cat)
-      setArtigos(lista.items)
-      setCarregando(false)
+      try {
+        const [cat, lista] = await Promise.all([getCategoria(slug), getArtigos(1, 100)])
+        setCategoria(cat)
+        setArtigos(lista.items)
+      } catch {
+        setCategoria(categoriaExemploComSecoes(slug))
+        setArtigos(artigosExemplo)
+      } finally {
+        setCarregando(false)
+      }
     }
     carregar()
   }, [slug])
