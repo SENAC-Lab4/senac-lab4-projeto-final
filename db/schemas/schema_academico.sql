@@ -55,7 +55,7 @@ CREATE TABLE academico.avaliacoes (
 );
 
 -- Tabela com registro de presença
-CREATE TABLE academico.registro_presenca (
+CREATE TABLE academico.registros_presenca (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     disciplina_id UUID NOT NULL REFERENCES academico.disciplinas(id) ON DELETE CASCADE,
     "data" DATE NOT NULL DEFAULT current_date,
@@ -70,9 +70,195 @@ CREATE TABLE academico.registro_presenca (
 -- =================================================
 CREATE INDEX idx_disciplinas_aluno_id ON academico.disciplinas(aluno_id);
 CREATE INDEX idx_avaliacos_disciplina_id ON academico.avaliacoes(disciplina_id);
-CREATE INDEX idx_presenca_disciplina_id ON academico.registro_presenca(disciplina_id);
+CREATE INDEX idx_presenca_disciplina_id ON academico.registros_presenca(disciplina_id);
 
 -- =================================================
--- Criação de TRIGGERS
+-- Funções de cálculos da média do aluno e da presença
 -- =================================================
-CREATE FUNCTION IF NOT EXISTS 
+
+-- Média do bimestre é a soma ponderada dos componentes do bimestre 
+CREATE OR REPLACE FUNCTION academico.media_bimestre(p_disciplina UUID, p_bimestre SMALLINT)
+RETURNS NUMERIC
+LANGUAGE sql STABLE
+AS $$
+    SELECT CASE WHEN SUM(peso) > 0
+        THEN ROUND(SUM(nota * peso) / SUM(peso), 2)
+        ELSE NULL END
+    FROM academico.avaliacoes
+    WHERE disciplina_id = p_disciplina
+      AND tipo IN ('bimestral', 'prova_integradora', 'jornada')
+      AND bimestre = p_bimestre;
+$$;
+
+-- Última nota de recuperação lançada
+CREATE OR REPLACE FUNCTION academico.nota_recuperacao(p_disciplina UUID)
+RETURNS NUMERIC
+LANGUAGE sql STABLE
+AS $$
+    SELECT nota
+    FROM academico.avaliacoes
+    WHERE disciplina_id = p_disciplina
+      AND tipo = 'recuperacao'
+    ORDER BY criado_em DESC
+    LIMIT 1;
+$$;
+
+-- Média final do semestre, considerando recuperaçãoq aundo aplicável
+CREATE OR REPLACE FUNCTION academico.media_final(p_disciplina UUID)
+RETURNS NUMERIC
+LANGUAGE plpgsql STABLE
+AS $$
+DECLARE
+    v_b1 NUMERIC := academico.media_bimestre(p_disciplina, 1);
+    v_b2 NUMERIC := academico.media_bimestre(p_disciplina, 2);
+    v_parcial NUMERIC;
+    v_rec NUMERIC;
+BEGIN
+    IF v_b1 IS NULL OR v_b2 IS NULL THEN
+        RETURN NULL; -- ainda não há notas dos dois bimestres
+    END IF;
+    v_parcial := ROUND((v_b1 + v_b2) / 2, 2);
+    -- parovado direto (>=6) ou reprovado direito (<2)
+    IF v_parcial >= 6 OR v_parcial < 2 THEN
+        RETURN v_parcial;
+    END IF;
+    -- recuperação (2 <= média < 6)
+    v_rec := academico.nota_recuperacao(p_disciplina);
+    IF v_rec IS NULL THEN
+        RETURN v_parcial;   -- aluno está de recuperação, mas ainda não tem nota
+    END IF;
+    RETURN ROUND((v_parcial + v_rec) / 2, 2);
+END;
+$$;
+
+-- Função que informa situação do aluno de acordo com a média
+-- <2 Reprovado | 2..<6 Recupração | >= Aprovado
+CREATE OR REPLACE FUNCTION academico.situacao_media(p_disciplina UUID)
+RETURNS TEXT
+LANGUAGE plpgsql STABLE
+AS $$
+DECLARE
+    v_b1 NUMERIC := academico.media_bimestre(p_disciplina, 1);
+    v_b2 NUMERIC := academico.media_bimestre(p_disciplina, 2);
+    v_parcial NUMERIC;
+    v_rec NUMERIC;
+BEGIN
+    IF v_b1 IS NULL OR v_b2 IS NULL THEN
+        RETURN 'Em curso';
+    END IF;
+    v_parcial := (v_b1 + v_b2) / 2;
+    IF v_parcial >= 6 THEN
+        RETURN 'Aprovado';
+    ELSIF v_parcial < 2 THEN
+        RETURN 'Reprovado';
+    END IF;
+    -- recuperação
+    v_rec := academico.nota_recuperacao(p_disciplina);
+    IF v_rec IS NULL THEN
+        RETURN 'Recuperação';    -- ainda está sem nota de recuperação
+    END IF;
+    -- Foi aprovado com a nota da recuperação
+    IF (v_parcial + v_rec) / 2 >= 6 THEN
+        RETURN 'Aprovado';
+    ELSE
+        RETURN 'Reprovado';
+    END IF;
+END;
+$$;
+
+-- Situação da frequência (mínima de 75% de presença)
+CREATE OR REPLACE FUNCTION academico.situacao_frequencia(p_disciplina UUID)
+RETURNS TEXT
+LANGUAGE plpgsql STABLE
+AS $$
+DECLARE
+    v_total INT;
+    v_faltas INT;
+    v_pct_faltas NUMERIC;
+BEGIN
+    SELECT total_aulas INTO v_total
+    FROM academico.disciplinas WHERE id = p_disciplina;
+    IF v_total IS NULL OR v_total = 0 THEN
+        RETURN 'Em curso';
+    END IF;
+    SELECT COUNT(*) INTO v_faltas
+    FROM academico.registros_presenca
+    WHERE disciplina_id = p_disciplina AND presente = false;
+    v_pct_faltas := (v_faltas::NUMERIC / v_total) * 100;
+    IF v_pct_faltas > 25 THEN
+        RETURN 'Reprovado';
+    ELSIF v_pct_faltas >= 20 THEN
+        RETURN 'Em risco';
+    ELSE
+        RETURN 'Aprovado';
+    END IF;
+END;
+$$;
+
+-- =================================================
+-- VIEW DE RESUMO
+-- =================================================
+CREATE VIEW academico.vw_disciplina_resumo AS
+SELECT
+    d.id,
+    d.aluno_id,
+    d.nome,
+    d.periodo_letivo,
+    d.total_aulas,
+    academico.media_bimestre(d.id, 1::SMALLINT) AS media_b1,
+    academico.media_bimestre(d.id, 2::SMALLINT) AS media_b2,
+    academico.media_final(d.id) AS media_final,
+    academico.situacao_media(d.id) AS situacao_media,
+    (SELECT COUNT(*) FROM academico.registros_presenca p
+        WHERE p.disciplina_id = d.id AND p.presente = false) AS faltas,
+    (SELECT COUNT(*) FROM academico.registros_presenca p
+        WHERE p.disciplina_id = d.id) AS aulas_registradas,
+    academico.situacao_frequencia(d.id) AS situacao_frequencia
+FROM academico.disciplinas d;
+
+-- ================================================
+-- RLS - cada aluno acessa apenas seus próprios dados
+-- ================================================
+ALTER TABLE academico.disciplinas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE academico.avaliacoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE academico.registros_presenca ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Aluno gerencia as próprias disciplinas"
+    ON academico.disciplinas FOR ALL
+    USING (aluno_id = auth.uid())
+    WITH CHECK (aluno_id = auth.uid());
+
+CREATE POLICY "Aluno gerencia as próprias avaliações"
+    ON academico.avaliacoes FOR ALL
+    USING (EXISTS (
+        SELECT 1 FROM academico.disciplinas d
+        WHERE d.id = avaliacoes.disciplina_id AND d.aluno_id = auth.uid()
+    ))
+    WITH CHECK (EXISTS (
+        SELECT 1 FROM academico.disciplinas d
+        WHERE d.id = avaliacoes.disciplina_id AND d.aluno_id = auth.uid()
+    ));
+
+CREATE POLICY "Aluno gerencia os próprios registros de presença"
+    ON academico.registros_presenca FOR ALL
+    USING (EXISTS (
+        SELECT 1 FROM academico.disciplinas d
+        WHERE d.id = registros_presenca.disciplina_id AND d.aluno_id = auth.uid()
+    ))
+    WITH CHECK (EXISTS (
+        SELECT 1 FROM academico.disciplinas d
+        WHERE d.id = registros_presenca.disciplina_id AND d.aluno_id = auth.uid()
+    ));
+
+-- ================================================
+-- TRIGGERS
+-- ================================================
+CREATE TRIGGER trg_disciplinas_atualizado_em
+    BEFORE UPDATE ON academico.disciplinas
+    FOR EACH ROW
+    EXECUTE FUNCTION set_atualizado_em();
+
+CREATE TRIGGER trg_avaliacoes_atualizado_em
+    BEFORE UPDATE ON academico.avaliacoes
+    FOR EACH ROW
+    EXECUTE FUNCTION set_atualizado_em();
