@@ -40,7 +40,7 @@ CREATE TABLE cms.artigos (
     autor_id UUID REFERENCES auth.users(id),
     titulo TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
-    conteudo TEXT NOT NULL, -- html ou markdown
+    conteudo TEXT NOT NULL, -- markdown (CommonMark/GFM), renderizado no cliente
     status cms.artigo_status NOT NULL DEFAULT 'rascunho',
     agendado_para TIMESTAMPTZ,
     publicado_em TIMESTAMPTZ, -- NULL significa não publicado ainda
