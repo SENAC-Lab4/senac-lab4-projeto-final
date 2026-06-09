@@ -13,15 +13,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# .env do ./backend
+# Arquivos .env (contêm segredos — nunca versionar)
+# Os .env.example são modelos sem segredos e DEVEM ser versionados.
 backend/.env
 backend/.env.*
-!.env.example
-frontend/env
-backend/env
-
-# .env do ./frontend
 frontend/.env
 frontend/.env.*
-frontend/.env
-frontend/.env
+!backend/.env.example
+!frontend/.env.example
+
+# Expo (cache local, específico da máquina)
+.expo/
+frontend/.expo/

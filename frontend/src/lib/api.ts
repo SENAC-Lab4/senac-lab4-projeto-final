@@ -1,4 +1,25 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8000'
+import Constants from 'expo-constants'
+
+const API_PORT = 8000
+
+// Resolve a URL do backend nesta ordem:
+// 1. EXPO_PUBLIC_API_URL, se definida no .env (deploy/nuvem ou IP fixo).
+// 2. IP da máquina que está servindo o app (Metro/Expo) — detectado em runtime,
+//    de modo que cada pessoa que clonar e rodar `npm start` alcance o backend
+//    local dela sem editar nada, mesmo que o IP da rede mude.
+// 3. localhost, como último recurso (emulador/web na própria máquina).
+function resolverApiUrl(): string {
+  const doEnv = process.env.EXPO_PUBLIC_API_URL
+  if (doEnv) return doEnv
+
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost
+  const host = hostUri?.split(':')[0]
+  if (host) return `http://${host}:${API_PORT}`
+
+  return `http://localhost:${API_PORT}`
+}
+
+const API_URL = resolverApiUrl()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const controller = new AbortController()
@@ -24,6 +45,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 function authHeaders(token: string) {
   return { Authorization: `Bearer ${token}` }
+}
+
+// ---------- Auth ----------
+
+export function getPerfil(token: string) {
+  return request<Perfil>('/auth/me', { headers: authHeaders(token) })
 }
 
 // ---------- Categorias ----------
@@ -90,6 +117,13 @@ export function excluirArtigo(token: string, id: number) {
 }
 
 // ---------- Tipos ----------
+
+export interface Perfil {
+  id: string
+  email: string | null
+  nome_inteiro: string | null
+  funcao: 'estudante' | 'professor' | 'admin'
+}
 
 export interface Categoria {
   id: number

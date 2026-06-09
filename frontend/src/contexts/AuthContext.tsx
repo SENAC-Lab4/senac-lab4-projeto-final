@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { getPerfil } from '../lib/api'
 
 interface AuthContextData {
   session: Session | null
@@ -34,14 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function carregarFuncao(token: string) {
     try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8000'
-      const res = await fetch(`${apiUrl}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (res.ok) {
-        const perfil = await res.json()
-        setFuncao(perfil.funcao)
-      }
+      const perfil = await getPerfil(token)
+      setFuncao(perfil.funcao)
     } catch {
       // silencia erros de rede na inicialização
     } finally {

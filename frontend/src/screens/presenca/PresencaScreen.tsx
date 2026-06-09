@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, TextInput,
   StyleSheet, Modal, ScrollView,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { cores } from '../../theme'
 
@@ -82,9 +83,9 @@ export default function PresencaScreen() {
 
   function corStatus(d: Disciplina) {
     const pct = porcentagemFaltas(d)
-    if (pct >= 25) return '#dc2626'
-    if (pct >= 20) return '#ca8a04'
-    return '#16a34a'
+    if (pct >= 25) return cores.erro
+    if (pct >= 20) return cores.alerta
+    return cores.sucesso
   }
 
   return (
@@ -120,7 +121,7 @@ export default function PresencaScreen() {
               {faltasRestantes > 0 ? (
                 <Text style={estilos.aviso}>Pode faltar mais {faltasRestantes} aula(s)</Text>
               ) : (
-                <Text style={[estilos.aviso, { color: '#dc2626' }]}>Limite de 25% atingido!</Text>
+                <Text style={[estilos.aviso, { color: cores.erro }]}>Limite de 25% atingido!</Text>
               )}
 
               <View style={estilos.botoes}>
@@ -128,7 +129,7 @@ export default function PresencaScreen() {
                   <Text style={estilos.botaoTexto}>− Falta</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={estilos.botaoAdicionar} onPress={() => adicionarFalta(item.id)}>
-                  <Text style={[estilos.botaoTexto, { color: '#fff' }]}>+ Falta</Text>
+                  <Text style={[estilos.botaoTexto, { color: cores.branco }]}>+ Falta</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -142,8 +143,15 @@ export default function PresencaScreen() {
         }
       />
 
-      <TouchableOpacity style={estilos.fab} onPress={() => { setErro(''); setModalVisivel(true) }}>
-        <Text style={estilos.fabTexto}>+</Text>
+      <TouchableOpacity style={estilos.fab} onPress={() => { setErro(''); setModalVisivel(true) }} activeOpacity={0.85}>
+        <LinearGradient
+          colors={cores.gradiente}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={estilos.fabGradiente}
+        >
+          <Text style={estilos.fabTexto}>+</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
       <Modal visible={modalVisivel} transparent animationType="slide">
@@ -171,7 +179,7 @@ export default function PresencaScreen() {
                 <Text style={estilos.botaoTexto}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={estilos.botaoAdicionar} onPress={adicionarDisciplina}>
-                <Text style={[estilos.botaoTexto, { color: '#fff' }]}>Adicionar</Text>
+                <Text style={[estilos.botaoTexto, { color: cores.branco }]}>Adicionar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -191,7 +199,7 @@ export default function PresencaScreen() {
                 <Text style={estilos.botaoTexto}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={estilos.botaoExcluirConfirmar} onPress={confirmarExclusao}>
-                <Text style={[estilos.botaoTexto, { color: '#fff' }]}>Remover</Text>
+                <Text style={[estilos.botaoTexto, { color: cores.branco }]}>Remover</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -204,18 +212,18 @@ export default function PresencaScreen() {
 const estilos = StyleSheet.create({
   container: { flex: 1, backgroundColor: cores.fundo },
   card: {
-    backgroundColor: '#fff', borderRadius: 12, padding: 16,
+    backgroundColor: cores.superficie, borderRadius: 12, padding: 16,
     marginBottom: 14, elevation: 2, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nome: { fontSize: 16, fontWeight: 'bold', color: cores.preto, flex: 1 },
   excluir: { color: cores.cinza, fontSize: 18, padding: 6, paddingLeft: 12 },
-  barraContainer: { height: 6, backgroundColor: '#f1f1f1', borderRadius: 3, marginBottom: 8 },
+  barraContainer: { height: 6, backgroundColor: cores.borda, borderRadius: 3, marginBottom: 8 },
   barra: { height: 6, borderRadius: 3 },
   infoLinha: { flexDirection: 'row', justifyContent: 'space-between' },
   info: { fontSize: 13, color: cores.cinza },
   pct: { fontSize: 13, fontWeight: 'bold' },
-  aviso: { fontSize: 12, color: '#16a34a', marginTop: 4 },
+  aviso: { fontSize: 12, color: cores.sucesso, marginTop: 4 },
   botoes: { flexDirection: 'row', gap: 8, marginTop: 12 },
   botaoAdicionar: { flex: 1, backgroundColor: cores.laranja, borderRadius: 8, padding: 10, alignItems: 'center' },
   botaoRemover: { flex: 1, borderWidth: 1, borderColor: cores.borda, borderRadius: 8, padding: 10, alignItems: 'center' },
@@ -223,22 +231,22 @@ const estilos = StyleSheet.create({
   vazio: { alignItems: 'center', marginTop: 60 },
   vazioTexto: { fontSize: 16, color: cores.cinza },
   vazioSub: { fontSize: 13, color: cores.cinza, marginTop: 6 },
-  fab: {
-    position: 'absolute', right: 20, bottom: 20,
+  fab: { position: 'absolute', right: 20, bottom: 20 },
+  fabGradiente: {
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: cores.laranja, justifyContent: 'center', alignItems: 'center',
-    elevation: 4,
+    justifyContent: 'center', alignItems: 'center',
+    elevation: 4, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
   },
-  fabTexto: { color: '#fff', fontSize: 28, lineHeight: 32 },
+  fabTexto: { color: cores.branco, fontSize: 28, lineHeight: 32 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modal: { backgroundColor: cores.superficie, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
   modalTitulo: { fontSize: 18, fontWeight: 'bold', color: cores.preto, marginBottom: 16 },
   modalMensagem: { fontSize: 14, color: cores.cinza, lineHeight: 20, marginBottom: 20 },
   input: {
     borderWidth: 1, borderColor: cores.borda, borderRadius: 8,
     padding: 12, fontSize: 15, color: cores.preto, marginBottom: 12,
   },
-  erro: { color: '#dc2626', fontSize: 13, marginBottom: 12 },
+  erro: { color: cores.erro, fontSize: 13, marginBottom: 12 },
   modalBotoes: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  botaoExcluirConfirmar: { flex: 1, backgroundColor: '#dc2626', borderRadius: 8, padding: 10, alignItems: 'center' },
+  botaoExcluirConfirmar: { flex: 1, backgroundColor: cores.erro, borderRadius: 8, padding: 10, alignItems: 'center' },
 })

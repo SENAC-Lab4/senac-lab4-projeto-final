@@ -43,7 +43,7 @@ export default function ArtigoScreen({ route }: Props) {
 }
 
 const estilos = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: cores.superficie },
   conteudo: { padding: 20 },
   centro: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   titulo: { fontSize: 24, fontWeight: 'bold', color: cores.preto, lineHeight: 32 },

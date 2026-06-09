@@ -17,7 +17,12 @@ export default function HomeScreen({ navigation }: Props) {
 
   useEffect(() => {
     getCategorias()
-      .then(lista => setCategorias(lista.length > 0 ? lista : categoriasExemplo))
+      .then(lista => {
+        // Ignora categorias de teste do banco (ex.: "Teste 1"). Se não sobrar
+        // nenhuma categoria real, exibe o conteúdo do Guia do Aluno (exemplo).
+        const reais = lista.filter(c => !c.slug.startsWith('teste'))
+        setCategorias(reais.length > 0 ? reais : categoriasExemplo)
+      })
       .catch(() => setCategorias(categoriasExemplo))
       .finally(() => setCarregando(false))
   }, [])
@@ -65,10 +70,10 @@ const estilos = StyleSheet.create({
   centro: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   busca: {
     margin: 16, marginBottom: 0, borderWidth: 1, borderColor: cores.borda,
-    borderRadius: 8, padding: 12, fontSize: 15, backgroundColor: '#fff', color: cores.preto,
+    borderRadius: 8, padding: 12, fontSize: 15, backgroundColor: cores.superficie, color: cores.preto,
   },
   card: {
-    backgroundColor: '#fff', borderRadius: 10, padding: 16,
+    backgroundColor: cores.superficie, borderRadius: 10, padding: 16,
     marginBottom: 12, borderLeftWidth: 4, borderLeftColor: cores.laranja,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },

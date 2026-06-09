@@ -87,7 +87,7 @@ const estilos = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8,
   },
   artigoItem: {
-    backgroundColor: '#fff', borderRadius: 8, padding: 14,
+    backgroundColor: cores.superficie, borderRadius: 8, padding: 14,
     marginBottom: 6, borderWidth: 1, borderColor: cores.borda,
   },
   artigoTitulo: { fontSize: 15, color: cores.preto },

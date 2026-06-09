@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert, ScrollView,
 } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { supabase } from '../../lib/supabase'
 import { cores } from '../../theme'
@@ -44,6 +45,7 @@ export default function CadastroScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={estilos.container}>
+        <StatusBar style="dark" />
         <Text style={estilos.titulo}>Criar conta</Text>
 
         <TextInput
@@ -73,7 +75,7 @@ export default function CadastroScreen({ navigation }: Props) {
 
         <TouchableOpacity style={estilos.botao} onPress={cadastrar} disabled={carregando}>
           {carregando
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={cores.branco} />
             : <Text style={estilos.botaoTexto}>Criar conta</Text>
           }
         </TouchableOpacity>
@@ -88,12 +90,12 @@ export default function CadastroScreen({ navigation }: Props) {
 
 const estilos = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: cores.fundo, justifyContent: 'center', padding: 24 },
-  titulo: { fontSize: 28, fontWeight: 'bold', color: cores.preto, marginBottom: 32 },
+  titulo: { fontSize: 28, fontWeight: 'bold', color: cores.azul, marginBottom: 32 },
   input: {
     borderWidth: 1, borderColor: cores.borda, borderRadius: 8,
-    padding: 14, marginBottom: 12, fontSize: 16, color: cores.preto, backgroundColor: '#fff',
+    padding: 14, marginBottom: 12, fontSize: 16, color: cores.preto, backgroundColor: cores.superficie,
   },
   botao: { backgroundColor: cores.laranja, borderRadius: 8, padding: 16, alignItems: 'center', marginTop: 8 },
-  botaoTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  link: { color: cores.laranja, textAlign: 'center', marginTop: 20, fontSize: 14 },
+  botaoTexto: { color: cores.branco, fontSize: 16, fontWeight: 'bold' },
+  link: { color: cores.azul, textAlign: 'center', marginTop: 20, fontSize: 14, fontWeight: '600' },
 })

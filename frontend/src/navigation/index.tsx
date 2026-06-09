@@ -26,9 +26,9 @@ function HomeStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: cores.fundo },
-        headerTitleStyle: { color: cores.preto, fontWeight: 'bold' },
-        headerTintColor: cores.laranja,
+        headerStyle: { backgroundColor: cores.azul },
+        headerTitleStyle: { color: cores.branco, fontWeight: 'bold' },
+        headerTintColor: cores.branco,
       }}
     >
       <Stack.Screen name="Inicio" component={HomeScreen} options={{ title: 'Guia do Aluno' }} />
@@ -43,9 +43,9 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: cores.laranja,
+        tabBarActiveTintColor: cores.azul,
         tabBarInactiveTintColor: cores.cinza,
-        tabBarStyle: { backgroundColor: '#fff', borderTopColor: cores.borda },
+        tabBarStyle: { backgroundColor: cores.superficie, borderTopColor: cores.borda },
       }}
     >
       <Tab.Screen
@@ -56,17 +56,17 @@ function MainTabs() {
       <Tab.Screen
         name="Calculadora"
         component={CalculadoraScreen}
-        options={{ title: 'Médias', tabBarIcon: ({ focused }) => <TabIcon emoji="🧮" focused={focused} />, headerShown: true, headerTitle: 'Calculadora de Médias', headerStyle: { backgroundColor: cores.fundo }, headerTitleStyle: { color: cores.preto, fontWeight: 'bold' } }}
+        options={{ title: 'Médias', tabBarIcon: ({ focused }) => <TabIcon emoji="🧮" focused={focused} />, headerShown: true, headerTitle: 'Calculadora de Médias', headerStyle: { backgroundColor: cores.azul }, headerTitleStyle: { color: cores.branco, fontWeight: 'bold' }, headerTintColor: cores.branco }}
       />
       <Tab.Screen
         name="Presenca"
         component={PresencaScreen}
-        options={{ title: 'Presença', tabBarIcon: ({ focused }) => <TabIcon emoji="✅" focused={focused} />, headerShown: true, headerTitle: 'Módulo de Presença', headerStyle: { backgroundColor: cores.fundo }, headerTitleStyle: { color: cores.preto, fontWeight: 'bold' } }}
+        options={{ title: 'Presença', tabBarIcon: ({ focused }) => <TabIcon emoji="✅" focused={focused} />, headerShown: true, headerTitle: 'Módulo de Presença', headerStyle: { backgroundColor: cores.azul }, headerTitleStyle: { color: cores.branco, fontWeight: 'bold' }, headerTintColor: cores.branco }}
       />
       <Tab.Screen
         name="Perfil"
         component={PerfilScreen}
-        options={{ title: 'Perfil', tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />, headerShown: true, headerTitle: 'Meu Perfil', headerStyle: { backgroundColor: cores.fundo }, headerTitleStyle: { color: cores.preto, fontWeight: 'bold' } }}
+        options={{ title: 'Perfil', tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />, headerShown: true, headerTitle: 'Meu Perfil', headerStyle: { backgroundColor: cores.azul }, headerTitleStyle: { color: cores.branco, fontWeight: 'bold' }, headerTintColor: cores.branco }}
       />
     </Tab.Navigator>
   )

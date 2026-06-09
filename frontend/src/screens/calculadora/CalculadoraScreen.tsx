@@ -42,9 +42,9 @@ export default function CalculadoraScreen() {
 
   function corDaMedia(media: number | null) {
     if (media === null) return cores.cinza
-    if (media >= 6) return '#16a34a'
-    if (media >= 5) return '#ca8a04'
-    return '#dc2626'
+    if (media >= 6) return cores.sucesso
+    if (media >= 5) return cores.alerta
+    return cores.erro
   }
 
   return (
@@ -152,10 +152,10 @@ export default function CalculadoraScreen() {
 const estilos = StyleSheet.create({
   container: { flex: 1, backgroundColor: cores.fundo },
   conteudo: { padding: 16 },
-  titulo: { fontSize: 22, fontWeight: 'bold', color: cores.preto, marginBottom: 6 },
+  titulo: { fontSize: 22, fontWeight: 'bold', color: cores.azul, marginBottom: 6 },
   subtitulo: { fontSize: 13, color: cores.cinza, marginBottom: 20, lineHeight: 18 },
   card: {
-    backgroundColor: '#fff', borderRadius: 12, padding: 16,
+    backgroundColor: cores.superficie, borderRadius: 12, padding: 16,
     marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4,
   },
   cardFinal: { borderWidth: 2, borderColor: cores.laranja },
@@ -169,8 +169,8 @@ const estilos = StyleSheet.create({
   },
   resultado: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', paddingTop: 8 },
   mediaFinal: { fontSize: 48, fontWeight: 'bold', textAlign: 'center', marginVertical: 8 },
-  aprovado: { color: '#16a34a', textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
-  reprovado: { color: '#dc2626', textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
+  aprovado: { color: cores.sucesso, textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
+  reprovado: { color: cores.erro, textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
   recTexto: { color: cores.preto, textAlign: 'center', marginTop: 8, fontSize: 15 },
   botaoLimpar: {
     borderWidth: 1, borderColor: cores.laranja, borderRadius: 8,

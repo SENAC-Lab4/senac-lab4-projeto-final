@@ -39,3 +39,35 @@ O backend expõe uma API REST completa em `http://localhost:8000` (docs em `/doc
 - **Estudante** — lê artigos, usa calculadoras e registra presença
 - **Professor** — acesso à leitura (mesma visão do estudante na v1.0)
 - **Admin** — publica e gerencia artigos pelo app
+
+## Como rodar
+
+### Pré-requisitos
+- **Node.js** (LTS)
+- **Python 3.13** — ⚠️ **não use a 3.14**, pois `pydantic-core` e `asyncpg` ainda não têm versão compatível e a instalação do backend falha.
+- Acesso às credenciais do Supabase (peça ao time — não ficam no repositório).
+
+### 1. Backend (em `../backend/`)
+```bash
+cd backend
+py -3.13 -m venv .venv         # garante o Python 3.13
+.venv\Scripts\activate          # Windows  (use: source .venv/bin/activate no Linux/macOS)
+pip install -r requirements.txt
+copy .env.example .env          # Windows  (use: cp no Linux/macOS) — depois preencha com as credenciais reais
+uvicorn app.main:app --reload --host 0.0.0.0
+```
+O `--host 0.0.0.0` deixa o backend acessível pelo celular na mesma rede. Confirme que subiu em `http://127.0.0.1:8000/docs`.
+
+### 2. Frontend (esta pasta)
+```bash
+cd frontend
+npm install
+copy .env.example .env          # Windows  (use: cp no Linux/macOS) — depois preencha com as credenciais reais
+npm start
+```
+Escaneie o QR Code com o app **Expo Go** (celular na **mesma rede Wi-Fi** do computador).
+
+### Sobre os `.env`
+Os arquivos `.env` **não** vão para o Git (contêm segredos). Copie cada `.env.example` para `.env` e preencha com os valores reais do Supabase.
+
+A URL do backend é **detectada automaticamente** pelo IP da máquina que roda o `npm start` — não é preciso configurar IP manualmente. Para apontar a um backend fixo (ex.: publicado na nuvem), defina `EXPO_PUBLIC_API_URL` no `.env`.

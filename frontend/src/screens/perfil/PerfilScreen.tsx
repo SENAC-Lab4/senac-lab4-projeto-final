@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '../../contexts/AuthContext'
 import { cores } from '../../theme'
 
@@ -23,9 +24,14 @@ export default function PerfilScreen() {
 
   return (
     <View style={estilos.container}>
-      <View style={estilos.avatar}>
+      <LinearGradient
+        colors={cores.gradiente}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={estilos.avatar}
+      >
         <Text style={estilos.avatarLetra}>{email[0]?.toUpperCase() ?? '?'}</Text>
-      </View>
+      </LinearGradient>
 
       <Text style={estilos.email}>{email}</Text>
       {funcao && (
@@ -45,18 +51,19 @@ const estilos = StyleSheet.create({
   container: { flex: 1, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center', padding: 24 },
   avatar: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: cores.laranja, justifyContent: 'center', alignItems: 'center', marginBottom: 16,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 16,
+    elevation: 4, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
-  avatarLetra: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
+  avatarLetra: { color: cores.branco, fontSize: 32, fontWeight: 'bold' },
   email: { fontSize: 16, color: cores.preto, marginBottom: 12 },
   badge: {
-    backgroundColor: cores.laranja + '20', borderRadius: 20,
+    backgroundColor: cores.azul + '20', borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 6, marginBottom: 40,
   },
-  badgeTexto: { color: cores.laranja, fontWeight: 'bold', fontSize: 13 },
+  badgeTexto: { color: cores.azul, fontWeight: 'bold', fontSize: 13 },
   botaoSair: {
-    borderWidth: 1, borderColor: '#dc2626', borderRadius: 8,
+    borderWidth: 1, borderColor: cores.erro, borderRadius: 8,
     paddingVertical: 14, paddingHorizontal: 48,
   },
-  botaoSairTexto: { color: '#dc2626', fontWeight: 'bold', fontSize: 15 },
+  botaoSairTexto: { color: cores.erro, fontWeight: 'bold', fontSize: 15 },
 })
